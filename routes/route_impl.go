@@ -2,6 +2,7 @@ package routes
 
 import (
 	"task_queue/controllers"
+	"task_queue/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -16,5 +17,6 @@ func NewRoute(controller controllers.QueueController, router *gin.RouterGroup) T
 }
 
 func (r *routeImpl) Serve() {
+	r.Router.Use(middlewares.APIKeyAuth())
 	r.Router.POST("/", r.Controller.SetQueue)
 }

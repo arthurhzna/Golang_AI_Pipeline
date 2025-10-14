@@ -13,4 +13,5 @@ var GeneralErrors = []error{
 	ErrInternalServerError,
 	ErrUnauthorized,
 	ErrForbidden,
+	ErrInvalidAPIKey,
 }
