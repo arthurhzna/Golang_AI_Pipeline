@@ -6,7 +6,7 @@ import (
 )
 
 type QueueRequest struct {
-	Images    *multipart.FileHeader `form:"file" binding:"required"`
+	Images    *multipart.FileHeader `form:"image" binding:"required"`
 	Timestamp time.Time             `form:"timestamp" binding:"required"`
 	DeviceId  string                `form:"device_id" binding:"required"`
 }

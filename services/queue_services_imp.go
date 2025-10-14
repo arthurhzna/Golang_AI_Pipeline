@@ -30,7 +30,6 @@ func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest)
 	timestamp := time.Now().Format("20060102_150405")
 	filename := fmt.Sprintf("%s_%s", data.DeviceId, timestamp)
 	filepath := filepath.Join(baseDir, filename)
-
 	src, err := data.Images.Open()
 	if err != nil {
 		return nil, errWrap.WrapError(fmt.Errorf("failed to open uploaded file: %w", err))

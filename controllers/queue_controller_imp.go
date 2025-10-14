@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"task_queue/domain/dto"
 	"task_queue/services"
@@ -43,7 +44,7 @@ func (c *QueueControllerImpl) SetQueue(ctx *gin.Context) {
 		})
 		return
 	}
-
+	fmt.Println("debug request", request)
 	result, err := c.service.SetQueue(ctx, &request)
 	if err != nil {
 		response.HttpResponse(response.ParamHTTPResp{

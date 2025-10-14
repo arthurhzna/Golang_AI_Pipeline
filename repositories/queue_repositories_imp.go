@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"context"
+	"encoding/json"
+
 	errWrap "task_queue/common/error"
 	errConstant "task_queue/constants/error"
 	models "task_queue/domain/model"
@@ -18,12 +20,11 @@ func NewQueueRepository(db *redis.Client) QueueRepository {
 }
 
 func (r *QueueRepositoryImpl) SetQueue(ctx context.Context, data *models.QueueDataRedis) error {
-	// dataRedis := models.QueueDataRedis{
-	// 	Path:      data.Path,
-	// 	DeviceID:  data.DeviceID,
-	// 	Timestamp: data.Timestamp,
-	// }
-	err := r.db.Set(ctx, "queue_image", data, 0).Err()
+	dataRedis, err := json.Marshal(data)
+	if err != nil {
+		return errWrap.WrapError(errConstant.ErrInternalServerError)
+	}
+	err = r.db.LPush(ctx, "queue_image", string(dataRedis)).Err()
 	if err != nil {
 		return errWrap.WrapError(errConstant.ErrInternalServerError)
 	}
