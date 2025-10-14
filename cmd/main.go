@@ -14,7 +14,10 @@ var command = &cobra.Command{
 	Long:  "task queue",
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = godotenv.Load()
-		redisClient := config.CreateClient(0, os.Getenv("DB_ADDR"), os.Getenv("DB_PASS"))
+		redisClient, err := config.CreateClient(0, os.Getenv("DB_ADDR"), os.Getenv("DB_PASS"))
+		if err != nil {
+			panic(err)
+		}
 
 	},
 }

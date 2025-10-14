@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  worker:
+    build: .
+    container_name: python-worker
+    env_file:
+      - .env
+    restart: unless-stopped
+    volumes:
+      - shared_images:/data/images  # <-- mount shared volume yang sama

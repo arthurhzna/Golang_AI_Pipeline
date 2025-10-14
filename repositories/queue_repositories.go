@@ -2,9 +2,9 @@ package repositories
 
 import (
 	"context"
-	"time"
+	"task_queue/domain/model"
 )
 
 type QueueRepository interface {
-	SetQueue(context.Context, string, string, time.Time) error
+	SetQueue(context.Context, *models.QueueDataRedis) error
 }
