@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"os"
 	"task_queue/config"
 	"task_queue/controllers"
@@ -25,7 +26,7 @@ var command = &cobra.Command{
 	Long:  "task queue",
 	Run: func(cmd *cobra.Command, args []string) {
 		_ = godotenv.Load()
-		redisClient, err := config.CreateClient(0, os.Getenv("DB_ADDR"), os.Getenv("DB_PASS"))
+		redisClient, err := config.CreateClient(context.Background(), 0, os.Getenv("REDIS_ADDR"), os.Getenv("REDIS_PASSWORD"))
 		if err != nil {
 			panic(err)
 		}
