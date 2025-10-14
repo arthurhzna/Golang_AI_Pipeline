@@ -2,8 +2,9 @@ package repositories
 
 import (
 	"context"
+	errWrap "task_queue/common/error"
 	errConstant "task_queue/constants/error"
-	"task_queue/domain/model"
+	models "task_queue/domain/model"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -24,7 +25,7 @@ func (r *QueueRepositoryImpl) SetQueue(ctx context.Context, data *models.QueueDa
 	// }
 	err := r.db.Set(ctx, "queue_image", data, 0).Err()
 	if err != nil {
-		return errConstant.ErrInternalServerError
+		return errWrap.WrapError(errConstant.ErrInternalServerError)
 	}
 	return nil
 }

@@ -3,6 +3,9 @@ package cmd
 import (
 	"os"
 	"task_queue/config"
+	"task_queue/controllers"
+	"task_queue/repositories"
+	"task_queue/services"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
@@ -18,6 +21,13 @@ var command = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
+
+		queueRepository := repositories.NewQueueRepository(redisClient)
+		queueService := services.NewQueueService(queueRepository)
+		queueController := controllers.NewQueueController(queueService)
+
+		// router := gin.Default()
+		// router.Use(middlewares.HandlePanic())
 
 	},
 }
