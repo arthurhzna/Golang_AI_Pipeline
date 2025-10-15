@@ -28,7 +28,7 @@ func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest)
 	}
 
 	timestamp := time.Now().Format("20060102_150405")
-	filename := fmt.Sprintf("%s_%s", data.DeviceId, timestamp)
+	filename := fmt.Sprintf("%s_%s.jpg", data.DeviceId, timestamp)
 	filepath := filepath.Join(baseDir, filename)
 	src, err := data.Images.Open()
 	if err != nil {

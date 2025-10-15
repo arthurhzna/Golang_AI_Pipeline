@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"context"
-	"task_queue/domain/model"
+	models "task_queue/domain/model"
 )
 
 type QueueRepository interface {

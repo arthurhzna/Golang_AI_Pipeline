@@ -31,7 +31,7 @@ var command = &cobra.Command{
 			panic(err)
 		}
 
-		queueRepository := repositories.NewQueueRepository(redisClient)
+		queueRepository := repositories.NewQueueRepository(redisClient, os.Getenv("KEY_REDIS_SEND"))
 		queueService := services.NewQueueService(queueRepository)
 		queueController := controllers.NewQueueController(queueService)
 

@@ -8,22 +8,22 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASS}"] 
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"] 
 
-  task_queue:
-    build: .
-    environment:
-      - REDIS_ADDR=${REDIS_ADDR}     
-      - REDIS_PASS=${REDIS_PASS}     
-      - API_KEY=${API_KEY}           
-      - APP_PORT=${APP_PORT}       
-    depends_on:
-      - redis
-    ports:
-      - "${APP_PORT:-8001}:8001"     
-    volumes:
-      - shared_images:/data/images
+  # task_queue:
+  #   build: .
+  #   environment:
+  #     - REDIS_ADDR=${REDIS_ADDR}     
+  #     - REDIS_PASS=${REDIS_PASS}     
+  #     - API_KEY=${API_KEY}           
+  #     - APP_PORT=${APP_PORT}       
+  #   depends_on:
+  #     - redis
+  #   ports:
+  #     - "${APP_PORT:-8001}:8001"     
+  #   volumes:
+  #     - shared_images:/data/images
 
 volumes:
   redis_data:
-  shared_images:
+#   shared_images:
