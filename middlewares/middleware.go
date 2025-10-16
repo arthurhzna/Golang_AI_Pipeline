@@ -60,7 +60,7 @@ func APIKeyAuth() gin.HandlerFunc {
 			return
 		}
 
-		logrus.Infof("Valid API key access from %s", c.ClientIP())
+		// logrus.Infof("Valid API key access from %s", c.ClientIP())
 		c.Next()
 	}
 }

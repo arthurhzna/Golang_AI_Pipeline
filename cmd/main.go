@@ -11,11 +11,12 @@ import (
 
 	"fmt"
 	"net/http"
+	"task_queue/common/aws"
 	"task_queue/common/response"
 	"task_queue/constants"
 	"task_queue/middlewares"
 	"task_queue/routes"
-	"task_queue/worker"
+	"task_queue/workers"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -37,7 +38,12 @@ var command = &cobra.Command{
 		queueService := services.NewQueueService(queueRepository, os.Getenv("BASE_DIR_SEND"), os.Getenv("BASE_DIR_GET"))
 		queueController := controllers.NewQueueController(queueService)
 
-		worker := worker.NewWorker(queueRepository)
+		awsS3 := aws.NewAWS_S3(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), os.Getenv("AWS_REGION"), os.Getenv("AWS_BUCKET"))
+		if err != nil {
+			panic(err)
+		}
+
+		worker := workers.NewWorker(queueRepository, awsS3)
 		numWorkers, err := strconv.Atoi(os.Getenv("WORKER"))
 		if err != nil {
 			numWorkers = 1
