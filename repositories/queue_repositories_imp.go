@@ -14,10 +14,11 @@ import (
 type QueueRepositoryImpl struct {
 	db                *redis.Client
 	keyRedisGroupSend string
+	keyRedisGroupGet  string
 }
 
-func NewQueueRepository(db *redis.Client, key_redis_group_send string) QueueRepository {
-	return &QueueRepositoryImpl{db: db, keyRedisGroupSend: key_redis_group_send}
+func NewQueueRepository(db *redis.Client, key_redis_group_send string, key_redis_group_get string) QueueRepository {
+	return &QueueRepositoryImpl{db: db, keyRedisGroupSend: key_redis_group_send, keyRedisGroupGet: key_redis_group_get}
 }
 
 func (r *QueueRepositoryImpl) SetQueue(ctx context.Context, data *models.QueueDataRedis) error {
@@ -31,4 +32,20 @@ func (r *QueueRepositoryImpl) SetQueue(ctx context.Context, data *models.QueueDa
 		return errWrap.WrapError(errConstant.ErrInternalServerError)
 	}
 	return nil
+}
+
+func (r *QueueRepositoryImpl) GetQueue(ctx context.Context) (*models.QueuePredictionRedis, error) {
+	data, err := r.db.RPop(ctx, r.keyRedisGroupGet).Result()
+	if err != nil {
+		if err == redis.Nil {
+			return nil, nil
+		}
+		return nil, errWrap.WrapError(errConstant.ErrQueueNotFound)
+	}
+	var prediction models.QueuePredictionRedis
+	err = json.Unmarshal([]byte(data), &prediction)
+	if err != nil {
+		return nil, errWrap.WrapError(errConstant.ErrInternalServerError)
+	}
+	return &prediction, nil
 }

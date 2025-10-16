@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"os"
+	"strconv"
 	"task_queue/config"
 	"task_queue/controllers"
 	"task_queue/repositories"
@@ -14,6 +15,7 @@ import (
 	"task_queue/constants"
 	"task_queue/middlewares"
 	"task_queue/routes"
+	"task_queue/worker"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -31,9 +33,19 @@ var command = &cobra.Command{
 			panic(err)
 		}
 
-		queueRepository := repositories.NewQueueRepository(redisClient, os.Getenv("KEY_REDIS_SEND"))
-		queueService := services.NewQueueService(queueRepository, os.Getenv("BASE_DIR_SEND"))
+		queueRepository := repositories.NewQueueRepository(redisClient, os.Getenv("KEY_REDIS_SEND"), os.Getenv("KEY_REDIS_GET"))
+		queueService := services.NewQueueService(queueRepository, os.Getenv("BASE_DIR_SEND"), os.Getenv("BASE_DIR_GET"))
 		queueController := controllers.NewQueueController(queueService)
+
+		worker := worker.NewWorker(queueRepository)
+		numWorkers, err := strconv.Atoi(os.Getenv("WORKER"))
+		if err != nil {
+			numWorkers = 1
+		}
+		err = worker.Run(context.Background(), numWorkers)
+		if err != nil {
+			panic(err)
+		}
 
 		router := gin.Default()
 		router.Use(middlewares.HandlePanic())

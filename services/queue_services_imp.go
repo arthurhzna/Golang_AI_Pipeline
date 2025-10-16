@@ -13,17 +13,18 @@ import (
 )
 
 type QueueServiceImpl struct {
-	repository repositories.QueueRepository
-	baseDir    string
+	repository  repositories.QueueRepository
+	baseDirSend string
+	baseDirGet  string
 }
 
-func NewQueueService(repository repositories.QueueRepository, baseDir string) QueueService {
-	return &QueueServiceImpl{repository: repository, baseDir: baseDir}
+func NewQueueService(repository repositories.QueueRepository, baseDirSend string, baseDirGet string) QueueService {
+	return &QueueServiceImpl{repository: repository, baseDirSend: baseDirSend, baseDirGet: baseDirGet}
 }
 
 func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest) (*dto.QueueResponse, error) {
 
-	baseDir := r.baseDir
+	baseDir := r.baseDirSend
 	if err := os.MkdirAll(baseDir, os.ModePerm); err != nil {
 		return nil, errWrap.WrapError(fmt.Errorf("failed to create directory: %w", err))
 	}

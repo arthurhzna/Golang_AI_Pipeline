@@ -7,4 +7,5 @@ import (
 
 type QueueRepository interface {
 	SetQueue(context.Context, *models.QueueDataRedis) error
+	GetQueue(context.Context) (*models.QueuePredictionRedis, error)
 }

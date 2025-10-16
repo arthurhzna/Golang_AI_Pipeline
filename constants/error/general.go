@@ -7,6 +7,7 @@ var (
 	ErrUnauthorized        = errors.New("unauthorized")
 	ErrForbidden           = errors.New("forbidden")
 	ErrInvalidAPIKey       = errors.New("invalid or missing API key")
+	ErrQueueNotFound       = errors.New("queue not found")
 )
 
 var GeneralErrors = []error{
@@ -14,4 +15,5 @@ var GeneralErrors = []error{
 	ErrUnauthorized,
 	ErrForbidden,
 	ErrInvalidAPIKey,
+	ErrQueueNotFound,
 }
