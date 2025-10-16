@@ -2,9 +2,7 @@ package mqtt
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
-	"strings"
 	"time"
 
 	errWrap "task_queue/common/error"
@@ -47,11 +45,11 @@ func (m *MQTTImpl) Connect(ctx context.Context) error {
 	opts.SetConnectRetry(true)
 	opts.SetConnectRetryInterval(5 * time.Second)
 
-	if strings.HasPrefix(m.broker, "ssl://") || strings.HasPrefix(m.broker, "tls://") {
-		opts.SetTLSConfig(&tls.Config{
-			InsecureSkipVerify: true,
-		})
-	}
+	// if strings.HasPrefix(m.broker, "ssl://") || strings.HasPrefix(m.broker, "tls://") {
+	// 	opts.SetTLSConfig(&tls.Config{
+	// 		InsecureSkipVerify: true,
+	// 	})
+	// }
 
 	opts.OnConnectionLost = func(client mqtt.Client, err error) {
 		fmt.Printf("MQTT Connection lost: %v\n", err)
@@ -80,7 +78,7 @@ func (m *MQTTImpl) Publish(ctx context.Context, topic string, message string) er
 		return errWrap.WrapError(fmt.Errorf("MQTT client is not connected"))
 	}
 
-	token := m.client.Publish(topic, 1, false, message)
+	token := m.client.Publish(topic, 1, true, message)
 	if !token.WaitTimeout(5 * time.Second) {
 		return errWrap.WrapError(fmt.Errorf("publish timeout"))
 	}

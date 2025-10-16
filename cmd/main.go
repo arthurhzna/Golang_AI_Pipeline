@@ -42,7 +42,7 @@ var command = &cobra.Command{
 		awsS3 := aws.NewAWS_S3(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), os.Getenv("AWS_REGION"), os.Getenv("AWS_BUCKET"))
 		mqtt := mqtt.NewMQTT(os.Getenv("MQTT_BROKER"), os.Getenv("MQTT_PORT"), os.Getenv("MQTT_CLIENT_ID"), os.Getenv("MQTT_USERNAME"), os.Getenv("MQTT_PASSWORD"))
 
-		worker := workers.NewWorker(queueRepository, awsS3, os.Getenv("KEY_AWS_BUCKET"), mqtt)
+		worker := workers.NewWorker(queueRepository, awsS3, os.Getenv("KEY_AWS_BUCKET"), mqtt, os.Getenv("MQTT_TOPIC"))
 		numWorkers, err := strconv.Atoi(os.Getenv("WORKER"))
 		if err != nil {
 			numWorkers = 1

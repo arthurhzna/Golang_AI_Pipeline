@@ -2,6 +2,7 @@ package workers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"task_queue/repositories"
@@ -12,13 +13,15 @@ import (
 )
 
 type WorkerImpl struct {
-	repository repositories.QueueRepository
-	awsS3      aws.AWS_S3
-	mqtt       mqtt.MQTT
+	repository   repositories.QueueRepository
+	awsS3        aws.AWS_S3
+	key_path_aws string
+	mqtt         mqtt.MQTT
+	mqtt_topic   string
 }
 
-func NewWorker(repository repositories.QueueRepository, awsS3 aws.AWS_S3, key_aws_bucket string, mqtt mqtt.MQTT) Worker {
-	return &WorkerImpl{repository: repository, awsS3: awsS3, mqtt: mqtt}
+func NewWorker(repository repositories.QueueRepository, awsS3 aws.AWS_S3, key_aws_bucket string, mqtt mqtt.MQTT, mqtt_topic string) Worker {
+	return &WorkerImpl{repository: repository, awsS3: awsS3, key_path_aws: key_aws_bucket, mqtt: mqtt, mqtt_topic: mqtt_topic}
 }
 
 func (w *WorkerImpl) Run(ctx context.Context, worker int) error {
@@ -58,6 +61,29 @@ func (w *WorkerImpl) Run(ctx context.Context, worker int) error {
 						continue
 					}
 					fmt.Printf("Worker %d - file uploaded to AWS S3\n", workerID)
+					jsonData, err := json.Marshal(data)
+					if err != nil {
+						errWrap.WrapError(fmt.Errorf("failed to marshal data to JSON: %w", err))
+						continue
+					}
+
+					if !w.mqtt.IsConnected() {
+						fmt.Printf("Worker %d - MQTT not connected, reconnecting...\n", workerID)
+						err := w.mqtt.Connect(ctx)
+						if err != nil {
+							errWrap.WrapError(fmt.Errorf("failed to reconnect MQTT: %w", err))
+							continue
+						}
+					}
+
+					fmt.Printf("Worker %d - publishing data to MQTT: %s\n", workerID, string(jsonData))
+
+					err = w.mqtt.Publish(ctx, w.mqtt_topic, data.OutputPath)
+					if err != nil {
+						errWrap.WrapError(fmt.Errorf("failed to publish data to MQTT: %w", err))
+						continue
+					}
+					fmt.Printf("Worker %d - data published to MQTT\n", workerID)
 				}
 			}
 		}(i + 1)
