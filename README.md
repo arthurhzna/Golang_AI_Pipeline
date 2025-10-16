@@ -2,7 +2,7 @@ Golang API → Redis Queue → Python AI Container → Redis Queue → Golang
 
 Worker → AWS S3 + MQTT
 
-Redis LPUSH/RPOP: ~0.1ms per operation
+Redis LPUSH/RPOP: 1–5 µs (microseconds) per operation
 
 Redis single-threaded but can handle 100k+ requests/sec
 
