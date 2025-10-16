@@ -2,15 +2,19 @@ package aws
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+
+	errWrap "task_queue/common/error"
 )
 
 type AWS_S3_Impl struct {
+	client          *s3.Client
 	accessKeyID     string
 	secretAccessKey string
 	region          string
@@ -21,7 +25,7 @@ func NewAWS_S3(accessKeyID string, secretAccessKey string, defaultRegion string,
 	return &AWS_S3_Impl{accessKeyID: accessKeyID, secretAccessKey: secretAccessKey, region: defaultRegion, bucket: bucket}
 }
 
-func (a *AWS_S3_Impl) CreateClient(ctx context.Context) (*s3.Client, error) {
+func (a *AWS_S3_Impl) CreateClient(ctx context.Context) error {
 	cfg, err := config.LoadDefaultConfig(ctx,
 		config.WithRegion(a.region),
 		config.WithCredentialsProvider(
@@ -30,23 +34,28 @@ func (a *AWS_S3_Impl) CreateClient(ctx context.Context) (*s3.Client, error) {
 				a.secretAccessKey,
 				"")))
 	if err != nil {
-		return nil, err
+		return errWrap.WrapError(err)
 	}
-	return s3.NewFromConfig(cfg), nil
+	a.client = s3.NewFromConfig(cfg)
+	return nil
 }
 
-func (a *AWS_S3_Impl) UploadFile(ctx context.Context, s3Client *s3.Client, filePath, key string) error {
+func (a *AWS_S3_Impl) UploadFile(ctx context.Context, filePath, key string) error {
+	if a.client == nil {
+		return errWrap.WrapError(fmt.Errorf("S3 client is not initialized"))
+	}
 	file, err := os.Open(filePath)
 	if err != nil {
-		return err
+		return errWrap.WrapError(err)
 	}
 	defer file.Close()
 
-	_, err = s3Client.PutObject(ctx, &s3.PutObjectInput{
+	_, err = a.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(a.bucket),
 		Key:         aws.String(key),
 		Body:        file,
 		ContentType: aws.String("image/jpeg"),
 	})
+
 	return err
 }

@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	errWrap "task_queue/common/error"
 	"task_queue/domain/dto"
 	models "task_queue/domain/model"
 	"task_queue/repositories"
@@ -26,7 +25,7 @@ func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest)
 
 	baseDir := r.baseDirSend
 	if err := os.MkdirAll(baseDir, os.ModePerm); err != nil {
-		return nil, errWrap.WrapError(fmt.Errorf("failed to create directory: %w", err))
+		return nil, err
 	}
 	timestamp := strings.ReplaceAll(data.Timestamp, "-", "")
 	timestamp = strings.ReplaceAll(timestamp, " ", "_")
@@ -36,18 +35,18 @@ func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest)
 	filepath := filepath.Join(baseDir, filename)
 	src, err := data.Images.Open()
 	if err != nil {
-		return nil, errWrap.WrapError(fmt.Errorf("failed to open uploaded file: %w", err))
+		return nil, err
 	}
 	defer src.Close()
 
 	dst, err := os.Create(filepath)
 	if err != nil {
-		return nil, errWrap.WrapError(fmt.Errorf("failed to create file: %w", err))
+		return nil, err
 	}
 	defer dst.Close()
 
 	if _, err := dst.ReadFrom(src); err != nil {
-		return nil, errWrap.WrapError(fmt.Errorf("failed to save file: %w", err))
+		return nil, err
 	}
 
 	DataRedis := models.QueueDataRedis{
