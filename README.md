@@ -6,8 +6,8 @@ Redis single-threaded but can handle 100k+ requests/sec
 
 Scalability
     scale horizontally:
-        Multiple Python AI containers  ---> x Worker
-        Multiple Golang workers ---> x Worker
+        Multiple Thread/Worker Python AI ---> x Worker
+        Multiple Golang Workers ---> x Worker
         Redis cluster 
 
 todo:
