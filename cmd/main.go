@@ -32,7 +32,7 @@ var command = &cobra.Command{
 		}
 
 		queueRepository := repositories.NewQueueRepository(redisClient, os.Getenv("KEY_REDIS_SEND"))
-		queueService := services.NewQueueService(queueRepository)
+		queueService := services.NewQueueService(queueRepository, os.Getenv("BASE_DIR_SEND"))
 		queueController := controllers.NewQueueController(queueService)
 
 		router := gin.Default()
