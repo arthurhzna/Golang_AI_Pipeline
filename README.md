@@ -1,4 +1,4 @@
-# Golang_AI_Pipeline
+# Task Queue - Golang Redis Queue System
 
 A high-performance task queue system built with Go, Redis, AWS S3, and MQTT for processing and distributing AI prediction results.
 
@@ -10,8 +10,8 @@ Golang API → Redis Queue → Python AI Container → Redis Queue → Golang Wo
 
 ### Flow Diagram
 1. **API Layer**: Receives image uploads via HTTP POST
-2. **Redis Queue (Input)**: Stores raw metadata for Python AI processing
-3. **Python AI Worker**: Processes prediction
+2. **Redis Queue (Input)**: Stores raw image metadata for Python AI processing
+3. **Python AI Worker**: Processes images for license plate recognition
 4. **Redis Queue (Output)**: Stores prediction results
 5. **Golang Worker**: Retrieves predictions, uploads to S3, publishes to MQTT
 
@@ -76,7 +76,7 @@ golang_redis/
 
 - ✅ **High-Performance Queue**: Redis-based queue with microsecond latency
 - ✅ **Concurrent Workers**: Configurable number of goroutine workers
-- ✅ **AWS S3 Integration**: Automatic upload file prediction
+- ✅ **AWS S3 Integration**: Automatic upload of processed images
 - ✅ **MQTT Publishing**: Real-time notifications via MQTT broker
 - ✅ **API Key Authentication**: Secure endpoint access
 - ✅ **Graceful Shutdown**: Context-based worker lifecycle management
@@ -202,7 +202,109 @@ go build -o task-queue
 
 ---
 
+## 📡 API Endpoints
+
+### Health Check
+```http
+GET /
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Welcome to Task Queue"
+}
+```
+
+### Submit Image to Queue
+```http
+POST /task-queue/
+Headers:
+  x-api-key: your-api-key
+  Content-Type: multipart/form-data
+
+Form Data:
+  image: <file>
+  device_id: string
+  timestamp: string (format: YYYY-MM-DD HH:MM:SS)
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "data": {
+    "device_id": "device123",
+    "timestamp": "2024-01-01 12:00:00"
+  }
+}
+```
+
+---
+
+## 🔄 Worker Flow
+
+The background worker continuously:
+1. Polls Redis queue (`queue_image_predicted`) for processed predictions
+2. Uploads image to AWS S3
+3. Publishes prediction payload to MQTT broker
+4. Deletes local file after successful upload
+5. Sleeps briefly between iterations to prevent CPU spinning
+
+**MQTT Payload Format:**
+```json
+{
+  "device_id": "device123",
+  "timestamp_In": "2024-01-01 12:00:00",
+  "timestamp_Out": "2024-01-01 12:00:05",
+  "file_name": "device123_20240101_120000.jpg",
+  "image_aws_s3_path": "predicted/device123_20240101_120000.jpg",
+  "output_text": "L1293SM",
+  "predicted_plat_color": "black-white",
+  "predicted_plat_type": "gasoline",
+  "prediction_time_seconds": 2.9
+}
+```
+
+---
+
+## 🐳 Docker Services
+
+### Services in docker-compose.yml
+
+1. **redis**: Redis server with persistence
+2. **task_queue**: Golang application (API + Workers)
+
+### Volumes
+- `redis_data`: Persistent Redis data
+- `shared_images`: Raw images directory
+- `shared_predicted`: Processed images directory
+
+### Networks
+- `task-queue-network`: Bridge network for inter-service communication
+
+---
+
 ## 📊 Monitoring
+
+### Check Redis Queue Status
+
+```bash
+# Connect to Redis
+docker-compose exec redis redis-cli -a supersecretpassword
+
+# Check queue lengths
+LLEN queue_image_raw
+LLEN queue_image_predicted
+
+# View queue contents
+LRANGE queue_image_raw 0 -1
+LRANGE queue_image_predicted 0 -1
+
+# Monitor real-time commands
+MONITOR
+```
 
 ### View Application Logs
 
@@ -255,6 +357,9 @@ docker-compose exec redis redis-cli -a supersecretpassword ping
    - Use Redis Cluster for distributed queue processing
    - Update `REDIS_ADDR` to cluster endpoints
 
+4. **Multiple Python AI Workers**
+   - Scale Python container instances
+   - Each polls from same Redis queue
 
 ---
 
@@ -381,6 +486,18 @@ LPUSH queue_image_raw '{"file_name":"test.jpg","file_path":"/data/test.jpg","dev
 
 ---
 
+## 📄 License
+
+[Add your license here]
+
+---
+
+## 👥 Authors
+
+[Add your name/team here]
+
+---
+
 ## 🙏 Acknowledgments
 
 - Redis for high-performance queue
@@ -394,6 +511,8 @@ LPUSH queue_image_raw '{"file_name":"test.jpg","file_path":"/data/test.jpg","dev
 
 For issues and questions:
 - Open an issue on GitHub
+- Contact: [your-email@example.com]
+
 ---
 
 **Happy Queueing! 🚀**
