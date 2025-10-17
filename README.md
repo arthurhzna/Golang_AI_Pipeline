@@ -260,9 +260,9 @@ The background worker continuously:
   "timestamp_Out": "2024-01-01 12:00:05",
   "file_name": "device123_20240101_120000.jpg",
   "image_aws_s3_path": "predicted/device123_20240101_120000.jpg",
-  "output_text": "L1293SM",
-  "predicted_plat_color": "black-white",
-  "predicted_plat_type": "gasoline",
+  "output_text": "x",
+  "predicted_x": "x",
+  "predicted_y": "y",
   "prediction_time_seconds": 2.9
 }
 ```
@@ -411,8 +411,8 @@ The project includes automated CI/CD pipeline that:
 
 **Branch → ECR Repository Mapping:**
 - `main` → `task-queue-prod`
-- `staging` → `streetcam-golang-stag`
-- `development` → `streetcam-golang-dev`
+- `staging` → `task-queue-stag`
+- `development` → `task-queue-dev`
 
 ### Manual Deployment
 
@@ -503,4 +503,5 @@ For issues and questions:
 ---
 
 **Happy Queueing! 🚀**
+
 
