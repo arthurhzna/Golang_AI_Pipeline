@@ -1,4 +1,4 @@
-# Task Queue - Golang Redis Queue System
+# Golang_AI_Pipeline
 
 A high-performance task queue system built with Go, Redis, AWS S3, and MQTT for processing and distributing AI prediction results.
 
@@ -11,7 +11,7 @@ Golang API → Redis Queue → Python AI Container → Redis Queue → Golang Wo
 ### Flow Diagram
 1. **API Layer**: Receives image uploads via HTTP POST
 2. **Redis Queue (Input)**: Stores raw image metadata for Python AI processing
-3. **Python AI Worker**: Processes images for license plate recognition
+3. **Python AI Worker**: Processes images prediction
 4. **Redis Queue (Output)**: Stores prediction results
 5. **Golang Worker**: Retrieves predictions, uploads to S3, publishes to MQTT
 
@@ -486,18 +486,6 @@ LPUSH queue_image_raw '{"file_name":"test.jpg","file_path":"/data/test.jpg","dev
 
 ---
 
-## 📄 License
-
-[Add your license here]
-
----
-
-## 👥 Authors
-
-[Add your name/team here]
-
----
-
 ## 🙏 Acknowledgments
 
 - Redis for high-performance queue
@@ -511,8 +499,8 @@ LPUSH queue_image_raw '{"file_name":"test.jpg","file_path":"/data/test.jpg","dev
 
 For issues and questions:
 - Open an issue on GitHub
-- Contact: [your-email@example.com]
 
 ---
 
 **Happy Queueing! 🚀**
+
