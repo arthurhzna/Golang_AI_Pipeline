@@ -22,11 +22,10 @@ type QueueServiceImpl struct {
 	mqttTopic   string
 	repository  repositories.QueueRepository
 	baseDirSend string
-	baseDirGet  string
 }
 
-func NewQueueService(awsS3 aws.AWS_S3, mqtt mqtt.MQTT, keyPathAWS string, mqttTopic string, repository repositories.QueueRepository, baseDirSend string, baseDirGet string) QueueService {
-	return &QueueServiceImpl{awsS3: awsS3, mqtt: mqtt, keyPathAWS: keyPathAWS, mqttTopic: mqttTopic, repository: repository, baseDirSend: baseDirSend, baseDirGet: baseDirGet}
+func NewQueueService(awsS3 aws.AWS_S3, mqtt mqtt.MQTT, keyPathAWS string, mqttTopic string, repository repositories.QueueRepository, baseDirSend string) QueueService {
+	return &QueueServiceImpl{awsS3: awsS3, mqtt: mqtt, keyPathAWS: keyPathAWS, mqttTopic: mqttTopic, repository: repository, baseDirSend: baseDirSend}
 }
 
 func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest) (*dto.QueueResponse, error) {
@@ -88,13 +87,13 @@ func (s *QueueServiceImpl) PublishPredictionToS3AndMQTT(ctx context.Context, dat
 	if err != nil {
 		return err
 	}
-	fmt.Printf("File uploaded to AWS S3: %s\n", key)
+
 	payload := dto.PredictionMQTTPayload{
 		DeviceID:           data.DeviceID,
 		Timestamp_In:       data.Timestamp,
 		Timestamp_Out:      time.Now().Format("2006-01-02 15:04:05"),
 		FileName:           data.FileName,
-		ImageOutputPath:    key,
+		ImageAWS3Path:      key,
 		OutputText:         data.OutputText,
 		PredictedPlatColor: data.PredictedPlatColor,
 		PredictedPlatType:  data.PredictedPlatType,
@@ -105,6 +104,6 @@ func (s *QueueServiceImpl) PublishPredictionToS3AndMQTT(ctx context.Context, dat
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Payload: %s\n", string(payloadJSON))
+
 	return s.mqtt.Publish(ctx, s.mqttTopic, string(payloadJSON))
 }

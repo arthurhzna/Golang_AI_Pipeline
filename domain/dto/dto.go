@@ -20,7 +20,7 @@ type PredictionMQTTPayload struct {
 	Timestamp_In       string  `json:"timestamp_In"`
 	Timestamp_Out      string  `json:"timestamp_Out"`
 	FileName           string  `json:"file_name"`
-	ImageOutputPath    string  `json:"image_output_path"`
+	ImageAWS3Path      string  `json:"image_aws_s3_path"`
 	OutputText         string  `json:"output_text"`
 	PredictedPlatColor string  `json:"predicted_plat_color"`
 	PredictedPlatType  string  `json:"predicted_plat_type"`

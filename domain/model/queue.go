@@ -15,5 +15,5 @@ type QueuePredictionRedis struct {
 	OutputText         string  `json:"output_text"`
 	PredictedPlatColor string  `json:"predicted_plat_color"`
 	PredictedPlatType  string  `json:"predicted_plat_type"`
-	TimeTakenPredict   float64 `json:"time_taken_predict"`
+	TimeTakenPredict   float64 `json:"prediction_time_seconds"`
 }

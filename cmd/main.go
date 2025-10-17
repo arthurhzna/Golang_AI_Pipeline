@@ -27,7 +27,6 @@ var command = &cobra.Command{
 	Long:  "task queue",
 	Run: func(cmd *cobra.Command, args []string) {
 		config.Init()
-		fmt.Println(config.Config)
 		redisClient, err := config.CreateClient(context.Background(), 0, config.Config.RedisAddr, config.Config.RedisPassword)
 		if err != nil {
 			panic(err)
@@ -71,7 +70,6 @@ var command = &cobra.Command{
 			config.Config.MQTTTopic,
 			queueRepository,
 			config.Config.BaseDirSend,
-			config.Config.BaseDirGet,
 		)
 
 		queueController := controllers.NewQueueController(

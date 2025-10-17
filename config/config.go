@@ -33,7 +33,6 @@ type AppConfig struct {
 	NumWorkers int
 
 	BaseDirSend string
-	BaseDirGet  string
 
 	APIKey string
 }
@@ -70,7 +69,6 @@ func Init() {
 		NumWorkers: numWorkers,
 
 		BaseDirSend: os.Getenv("BASE_DIR_SEND"),
-		BaseDirGet:  os.Getenv("BASE_DIR_GET"),
 
 		APIKey: os.Getenv("API_KEY"),
 	}
