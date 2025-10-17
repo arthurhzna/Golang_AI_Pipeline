@@ -261,8 +261,8 @@ The background worker continuously:
   "file_name": "device123_20240101_120000.jpg",
   "image_aws_s3_path": "predicted/device123_20240101_120000.jpg",
   "output_text": "x",
-  "predicted_x": "x",
-  "predicted_y": "y",
+  "predicted_x": "y",
+  "predicted_y": "z",
   "prediction_time_seconds": 2.9
 }
 ```
@@ -503,5 +503,6 @@ For issues and questions:
 ---
 
 **Happy Queueing! 🚀**
+
 
 
