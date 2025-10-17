@@ -2,23 +2,31 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"task_queue/common/aws"
+	"task_queue/common/mqtt"
 	"task_queue/domain/dto"
 	models "task_queue/domain/model"
 	"task_queue/repositories"
+	"time"
 )
 
 type QueueServiceImpl struct {
+	awsS3       aws.AWS_S3
+	mqtt        mqtt.MQTT
+	keyPathAWS  string
+	mqttTopic   string
 	repository  repositories.QueueRepository
 	baseDirSend string
 	baseDirGet  string
 }
 
-func NewQueueService(repository repositories.QueueRepository, baseDirSend string, baseDirGet string) QueueService {
-	return &QueueServiceImpl{repository: repository, baseDirSend: baseDirSend, baseDirGet: baseDirGet}
+func NewQueueService(awsS3 aws.AWS_S3, mqtt mqtt.MQTT, keyPathAWS string, mqttTopic string, repository repositories.QueueRepository, baseDirSend string, baseDirGet string) QueueService {
+	return &QueueServiceImpl{awsS3: awsS3, mqtt: mqtt, keyPathAWS: keyPathAWS, mqttTopic: mqttTopic, repository: repository, baseDirSend: baseDirSend, baseDirGet: baseDirGet}
 }
 
 func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest) (*dto.QueueResponse, error) {
@@ -55,7 +63,7 @@ func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest)
 		FileName:  filename,
 		Path:      filepath,
 		DeviceID:  data.DeviceId,
-		Timestamp: data.Timestamp,
+		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
 	}
 
 	err = r.repository.SetQueue(ctx, &DataRedis)
@@ -67,4 +75,36 @@ func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest)
 		DeviceId:  data.DeviceId,
 		Timestamp: data.Timestamp,
 	}, nil
+}
+
+func (s *QueueServiceImpl) GetQueue(ctx context.Context) (*models.QueuePredictionRedis, error) {
+	return s.repository.GetQueue(ctx)
+}
+
+func (s *QueueServiceImpl) PublishPredictionToS3AndMQTT(ctx context.Context, data *models.QueuePredictionRedis) error {
+
+	key := fmt.Sprintf("%s/%s", s.keyPathAWS, data.FileName)
+	err := s.awsS3.UploadFile(ctx, data.ImageOutputPath, key)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("File uploaded to AWS S3: %s\n", key)
+	payload := dto.PredictionMQTTPayload{
+		DeviceID:           data.DeviceID,
+		Timestamp_In:       data.Timestamp,
+		Timestamp_Out:      time.Now().Format("2006-01-02 15:04:05"),
+		FileName:           data.FileName,
+		ImageOutputPath:    key,
+		OutputText:         data.OutputText,
+		PredictedPlatColor: data.PredictedPlatColor,
+		PredictedPlatType:  data.PredictedPlatType,
+		TimeTakenPredict:   data.TimeTakenPredict,
+	}
+
+	payloadJSON, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Payload: %s\n", string(payloadJSON))
+	return s.mqtt.Publish(ctx, s.mqttTopic, string(payloadJSON))
 }

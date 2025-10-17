@@ -33,6 +33,31 @@ var command = &cobra.Command{
 			panic(err)
 		}
 
+		awsS3 := aws.NewAWS_S3(
+			config.Config.AWSAccessKeyID,
+			config.Config.AWSSecretAccessKey,
+			config.Config.AWSRegion,
+			config.Config.AWSBucket,
+		)
+
+		err = awsS3.CreateClient(context.Background())
+		if err != nil {
+			panic(err)
+		}
+
+		mqtt := mqtt.NewMQTT(
+			config.Config.MQTTBroker,
+			config.Config.MQTTPort,
+			config.Config.MQTTClientID,
+			config.Config.MQTTUsername,
+			config.Config.MQTTPassword,
+		)
+
+		err = mqtt.Connect(context.Background())
+		if err != nil {
+			panic(err)
+		}
+
 		queueRepository := repositories.NewQueueRepository(
 			redisClient,
 			config.Config.KeyRedisSend,
@@ -40,6 +65,10 @@ var command = &cobra.Command{
 		)
 
 		queueService := services.NewQueueService(
+			awsS3,
+			mqtt,
+			config.Config.AWSPathBucket,
+			config.Config.MQTTTopic,
 			queueRepository,
 			config.Config.BaseDirSend,
 			config.Config.BaseDirGet,
@@ -49,26 +78,8 @@ var command = &cobra.Command{
 			queueService,
 		)
 
-		awsS3 := aws.NewAWS_S3(
-			config.Config.AWSAccessKeyID,
-			config.Config.AWSSecretAccessKey,
-			config.Config.AWSRegion,
-			config.Config.AWSBucket,
-		)
-		mqtt := mqtt.NewMQTT(
-			config.Config.MQTTBroker,
-			config.Config.MQTTPort,
-			config.Config.MQTTClientID,
-			config.Config.MQTTUsername,
-			config.Config.MQTTPassword,
-		)
-
 		worker := workers.NewWorker(
-			queueRepository,
-			awsS3,
-			config.Config.AWSPathBucket,
-			mqtt,
-			config.Config.MQTTTopic,
+			queueService,
 		)
 
 		err = worker.Run(context.Background(), config.Config.NumWorkers)
