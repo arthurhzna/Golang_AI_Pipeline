@@ -17,9 +17,11 @@ type QueueResponse struct {
 
 type PredictionMQTTPayload struct {
 	DeviceID           string  `json:"device_id"`
-	Timestamp          string  `json:"timestamp"`
+	Timestamp_In       string  `json:"timestamp_In"`
+	Timestamp_Out      string  `json:"timestamp_Out"`
+	FileName           string  `json:"file_name"`
+	ImageOutputPath    string  `json:"image_output_path"`
 	OutputText         string  `json:"output_text"`
-	OutputPath         string  `json:"output_path"`
 	PredictedPlatColor string  `json:"predicted_plat_color"`
 	PredictedPlatType  string  `json:"predicted_plat_type"`
 	TimeTakenPredict   float64 `json:"time_taken_predict"`

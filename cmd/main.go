@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"context"
-	"os"
-	"strconv"
 	"task_queue/config"
 	"task_queue/controllers"
 	"task_queue/repositories"
@@ -20,7 +18,6 @@ import (
 	"task_queue/workers"
 
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 )
 
@@ -29,25 +26,52 @@ var command = &cobra.Command{
 	Short: "task queue",
 	Long:  "task queue",
 	Run: func(cmd *cobra.Command, args []string) {
-		_ = godotenv.Load()
-		redisClient, err := config.CreateClient(context.Background(), 0, os.Getenv("REDIS_ADDR"), os.Getenv("REDIS_PASSWORD"))
+		config.Init()
+		fmt.Println(config.Config)
+		redisClient, err := config.CreateClient(context.Background(), 0, config.Config.RedisAddr, config.Config.RedisPassword)
 		if err != nil {
 			panic(err)
 		}
 
-		queueRepository := repositories.NewQueueRepository(redisClient, os.Getenv("KEY_REDIS_SEND"), os.Getenv("KEY_REDIS_GET"))
-		queueService := services.NewQueueService(queueRepository, os.Getenv("BASE_DIR_SEND"), os.Getenv("BASE_DIR_GET"))
-		queueController := controllers.NewQueueController(queueService)
+		queueRepository := repositories.NewQueueRepository(
+			redisClient,
+			config.Config.KeyRedisSend,
+			config.Config.KeyRedisGet,
+		)
 
-		awsS3 := aws.NewAWS_S3(os.Getenv("AWS_ACCESS_KEY_ID"), os.Getenv("AWS_SECRET_ACCESS_KEY"), os.Getenv("AWS_REGION"), os.Getenv("AWS_BUCKET"))
-		mqtt := mqtt.NewMQTT(os.Getenv("MQTT_BROKER"), os.Getenv("MQTT_PORT"), os.Getenv("CLIENT_MQTT_ID"), os.Getenv("MQTT_USER"), os.Getenv("MQTT_PASS"))
+		queueService := services.NewQueueService(
+			queueRepository,
+			config.Config.BaseDirSend,
+			config.Config.BaseDirGet,
+		)
 
-		worker := workers.NewWorker(queueRepository, awsS3, os.Getenv("KEY_AWS_BUCKET"), mqtt, os.Getenv("MQTT_TOPIC"))
-		numWorkers, err := strconv.Atoi(os.Getenv("WORKER"))
-		if err != nil {
-			numWorkers = 1
-		}
-		err = worker.Run(context.Background(), numWorkers)
+		queueController := controllers.NewQueueController(
+			queueService,
+		)
+
+		awsS3 := aws.NewAWS_S3(
+			config.Config.AWSAccessKeyID,
+			config.Config.AWSSecretAccessKey,
+			config.Config.AWSRegion,
+			config.Config.AWSBucket,
+		)
+		mqtt := mqtt.NewMQTT(
+			config.Config.MQTTBroker,
+			config.Config.MQTTPort,
+			config.Config.MQTTClientID,
+			config.Config.MQTTUsername,
+			config.Config.MQTTPassword,
+		)
+
+		worker := workers.NewWorker(
+			queueRepository,
+			awsS3,
+			config.Config.AWSPathBucket,
+			mqtt,
+			config.Config.MQTTTopic,
+		)
+
+		err = worker.Run(context.Background(), config.Config.NumWorkers)
 		if err != nil {
 			panic(err)
 		}
@@ -81,7 +105,7 @@ var command = &cobra.Command{
 		group := router.Group("/task-queue")
 		route := routes.NewRoute(queueController, group)
 		route.Serve()
-		router.Run(os.Getenv("APP_PORT"))
+		router.Run(config.Config.AppPort)
 	},
 }
 

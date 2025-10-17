@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	errWrap "task_queue/common/error"
 	errConstant "task_queue/constants/error"
 	models "task_queue/domain/model"
@@ -22,7 +21,6 @@ func NewQueueRepository(db *redis.Client, key_redis_group_send string, key_redis
 }
 
 func (r *QueueRepositoryImpl) SetQueue(ctx context.Context, data *models.QueueDataRedis) error {
-	data.Path = strings.ReplaceAll(data.Path, "\\", "/")
 	dataRedis, err := json.Marshal(data)
 	if err != nil {
 		return errWrap.WrapError(errConstant.ErrInternalServerError)

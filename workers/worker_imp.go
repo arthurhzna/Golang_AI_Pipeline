@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"task_queue/common/aws"
 	errWrap "task_queue/common/error"
 	"task_queue/common/mqtt"
+	"task_queue/domain/dto"
 	"task_queue/repositories"
 	"time"
 )
@@ -51,36 +51,38 @@ func (w *WorkerImpl) Run(ctx context.Context, worker int) error {
 						time.Sleep(50 * time.Millisecond)
 						continue
 					}
-					// fmt.Printf("Worker %d - data: %+v\n", workerID, data)
-					data.ImageOutputPath = strings.ReplaceAll(data.ImageOutputPath, "\\", "/")
 
-					err = w.awsS3.UploadFile(ctx, data.ImageOutputPath, data.ImageOutputPath)
+					key := fmt.Sprintf("%s/%s", w.key_path_aws, data.FileName)
+					err = w.awsS3.UploadFile(ctx, data.ImageOutputPath, key)
 					if err != nil {
 						// time.Sleep(1 * time.Second)
 						continue
 					}
-					// fmt.Printf("Worker %d - file uploaded to AWS S3\n", workerID)
-					jsonData, err := json.Marshal(data)
+					fmt.Printf("Worker %d - file uploaded to AWS S3\n", workerID)
+
+					payload := dto.PredictionMQTTPayload{
+						DeviceID:           data.DeviceID,
+						Timestamp_In:       data.Timestamp,
+						Timestamp_Out:      time.Now().Format("2006-01-02 15:04:05"),
+						FileName:           data.FileName,
+						ImageOutputPath:    key,
+						OutputText:         data.OutputText,
+						PredictedPlatColor: data.PredictedPlatColor,
+						PredictedPlatType:  data.PredictedPlatType,
+						TimeTakenPredict:   data.TimeTakenPredict,
+					}
+
+					payloadJSON, err := json.Marshal(payload)
 					if err != nil {
-						errWrap.WrapError(fmt.Errorf("failed to marshal data to JSON: %w", err))
+						errWrap.WrapError(fmt.Errorf("failed to marshal payload to JSON: %w", err))
 						continue
 					}
 
-					// if !w.mqtt.IsConnected() {
-					// 	// fmt.Printf("Worker %d - MQTT not connected, reconnecting...\n", workerID)
-					// 	err := w.mqtt.Connect(ctx)
-					// 	if err != nil {
-					// 		continue
-					// 	}
-					// }
-
-					// fmt.Printf("Worker %d - publishing data to MQTT: %s\n", workerID, string(jsonData))
-
-					err = w.mqtt.Publish(ctx, w.mqtt_topic, string(jsonData))
+					err = w.mqtt.Publish(ctx, w.mqtt_topic, string(payloadJSON))
 					if err != nil {
 						continue
 					}
-					// fmt.Printf("Worker %d - data published to MQTT\n", workerID)
+					fmt.Printf("Worker %d - payload: %s\n", workerID, string(payloadJSON))
 					time.Sleep(30 * time.Millisecond)
 				}
 			}

@@ -49,7 +49,10 @@ func (r *QueueServiceImpl) SetQueue(ctx context.Context, data *dto.QueueRequest)
 		return nil, err
 	}
 
+	filepath = strings.ReplaceAll(filepath, "\\", "/")
+
 	DataRedis := models.QueueDataRedis{
+		FileName:  filename,
 		Path:      filepath,
 		DeviceID:  data.DeviceId,
 		Timestamp: data.Timestamp,

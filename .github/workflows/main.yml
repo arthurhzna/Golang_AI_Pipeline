@@ -1,0 +1,108 @@
+name: Build & Push Golang Task Queue to Amazon ECR
+
+on:
+  push:
+    branches: ["development", "staging", "main"]
+    paths:
+      - "Dockerfile"
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - "Makefile"
+      - ".github/workflows/main.yml"
+  workflow_dispatch: {}
+
+env:
+  AWS_REGION: ap-southeast-1
+  GO_VERSION: "1.24.2"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set ECR repository by branch
+        id: vars
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            main)
+              echo "ecr_repo=task-queue-prod" >> "$GITHUB_OUTPUT"
+              echo "env_name=production" >> "$GITHUB_OUTPUT"
+              ;;
+            staging)
+              echo "ecr_repo=streetcam-golang-stag" >> "$GITHUB_OUTPUT"
+              echo "env_name=staging" >> "$GITHUB_OUTPUT"
+              ;;
+            development)
+              echo "ecr_repo=streetcam-golang-dev" >> "$GITHUB_OUTPUT"
+              echo "env_name=development" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Unsupported branch: ${GITHUB_REF_NAME}"
+              exit 1
+              ;;
+          esac
+          
+          # Create version tag with commit SHA
+          SHORT_SHA=$(echo ${GITHUB_SHA} | cut -c1-7)
+          echo "short_sha=${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+          echo "version=${GITHUB_REF_NAME}-${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.login-ecr.outputs.registry }}/${{ steps.vars.outputs.ecr_repo }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.vars.outputs.version }}
+            type=sha,prefix=${{ steps.vars.outputs.env_name }}-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+
+      - name: Deployment summary
+        run: |
+          echo "### 🚀 Deployment Info" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ steps.vars.outputs.env_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**ECR Repository:** ${{ steps.vars.outputs.ecr_repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tags:**" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Image successfully pushed to Amazon ECR!" >> $GITHUB_STEP_SUMMARY
