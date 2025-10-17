@@ -3,9 +3,15 @@ version: "3.9"
 services:
   worker:
     build: .
-    container_name: python-worker
+    container_name: python-ai-prediciton
     env_file:
       - .env
     restart: unless-stopped
     volumes:
-      - shared_images:/data/images  # <-- mount shared volume yang sama
+      - shared_images:/data/images
+      - shared_predicted:/data/predicted
+    command: ["python", "queque.py"]
+    
+volumes:
+  shared_images:
+  shared_predicted:
