@@ -13,7 +13,7 @@
     },
     {
       "key": "x-api-key",
-      "value": "^zT1P{|?XeFog9T:GfC{fnhN*()_jv",
+      "value": {your-api-key},
       "type": "string"
     }
   ],
