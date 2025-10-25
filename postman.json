@@ -1,1 +1,82 @@
-
+{
+  "info": {
+    "name": "task-queue API",
+    "_postman_id": "b1a3f9d2-1c4a-4f2d-a8e3-0c9b5f7a9e6d",
+    "description": "Postman collection for the task-queue Go API. Includes root welcome and task-queue endpoints with example requests and environment variables.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8001",
+      "type": "string"
+    },
+    {
+      "key": "x-api-key",
+      "value": "^zT1P{|?XeFog9T:GfC{fnhN*()_jv",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Welcome",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Task Queue - Submit (multipart)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-api-key",
+            "value": "{{x-api-key}}"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "image",
+              "type": "file",
+              "src": ""
+            },
+            {
+              "key": "device_id",
+              "value": "device-1234",
+              "type": "text"
+            },
+            {
+              "key": "timestamp",
+              "value": "2025-10-25 12:00:00",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/task-queue/",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "task-queue",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
